@@ -5,7 +5,7 @@ use actix_web::{web, App, HttpServer};
 
 use dotenv::dotenv;
 use sqlx::{Pool, Postgres};
-use crate::services::product::service::{get_products, save_product};
+use crate::services::product::service::{get_products, save_product, get_product, delete_product};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -33,5 +33,7 @@ async fn main() -> std::io::Result<()>{
 fn config(config: &mut web::ServiceConfig) {
     config.service(web::scope("/api")
         .route("/products", web::get().to(get_products))
-        .route("/products", web::post().to(save_product)));
+        .route("/products", web::post().to(save_product))
+        .route("/products/{id}", web::get().to(get_product))
+        .route("/products/{id}", web::delete().to(delete_product)));
 }
