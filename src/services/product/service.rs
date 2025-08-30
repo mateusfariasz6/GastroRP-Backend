@@ -1,8 +1,14 @@
 use crate::services::product::models::ProductCategory;
 use actix_web::{web, HttpResponse, Responder};
+use apistos::api_operation;
 use crate::AppState;
 use super::models::{AllProducts, SaveProduct};
 
+#[api_operation(
+    summary = "Lista produtos",
+    tag = "products",
+    error_code = 500
+)]
 pub async fn get_products(app_state: web::Data<AppState>) -> impl Responder {
     let result = sqlx::query_as!(AllProducts,
         r#"
@@ -21,6 +27,11 @@ pub async fn get_products(app_state: web::Data<AppState>) -> impl Responder {
     }
 }
 
+#[api_operation(
+    summary = "Salva produto",
+    tag = "products",
+    error_code = 500
+)]
 pub async fn save_product(app_state: web::Data<AppState>, product: web::Json<SaveProduct>) -> impl Responder {
     let result = sqlx::query!(r#"INSERT INTO products_table (name, price, category) VALUES ($1, $2, $3::text::product_category) RETURNING id, name, price, category AS "category:ProductCategory";"#, product.name, product.price, product.category as _)
         .fetch_one(&app_state.postgres_client)
@@ -41,6 +52,12 @@ pub async fn save_product(app_state: web::Data<AppState>, product: web::Json<Sav
     }
 }
 
+#[api_operation(
+    summary = "Busca produto por ID",
+    tag = "products",
+    error_code = 500,
+    error_code = 404
+)]
 pub async fn get_product(app_state: web::Data<AppState>, id: web::Path<i32>) -> impl Responder {
     let result = sqlx::query_as!(AllProducts, r#"SELECT id, name, price, category AS "category:ProductCategory" FROM public.products_table WHERE id=$1"#, *id)
         .fetch_optional(&app_state.postgres_client)
@@ -65,6 +82,12 @@ pub async fn get_product(app_state: web::Data<AppState>, id: web::Path<i32>) -> 
     }
 }
 
+#[api_operation(
+    summary = "Deleta produto por ID",
+    tag = "products",
+    error_code = 500,
+    error_code = 404
+)]
 pub async fn delete_product(app_state: web::Data<AppState>, id: web::Path<i32>) -> impl Responder {
     let result = sqlx::query!("DELETE FROM products_table WHERE id=$1", *id)
         .execute(&app_state.postgres_client)
